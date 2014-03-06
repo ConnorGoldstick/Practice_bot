@@ -35,7 +35,7 @@ public class RobotTemplate extends IterativeRobot {
     Solenoid /*gear1, gear2,*/ fireOn, fireOff; //963-2568 Connor Phone Number
     Relay light, compressor;
     double speed, turn, leftspeed, rightspeed, conf;
-    int i = 0, endTimer = 0, noWait = 0, gyroTimer = 0;
+    int i = 0, endTimer = 0, noWait = 0, e = 0, gyroTimer = 0;
     boolean shooting = false, atShoot, afterShoot, checkGyro;
     Drive drive;
     AnalogChannel ultrasonic;
@@ -47,19 +47,22 @@ public class RobotTemplate extends IterativeRobot {
         
         xBox = new Joystick(1);
         
-        jagleft1 = new Jaguar(1);
-        jagright1 = new Jaguar(2);
+        jagleft1 = new Jaguar(2, 1);
+        jagright1 = new Jaguar(2, 2);
         //jagleft2 = new Jaguar(3);
         //jagright2 = new Jaguar(4);
         
         //gear1 = new Solenoid(1);
         //gear2 = new Solenoid(2);
         
-        fireOff = new Solenoid(7);
-        fireOn = new Solenoid(8);
+        fireOff = new Solenoid(1);
+        fireOn = new Solenoid(2);
         
-        light = new Relay(1);
-        compressor = new Relay(2);
+        gyro = new Gyro(1);
+        ultrasonic = new AnalogChannel(2);
+        
+        light = new Relay(2, 1);
+        compressor = new Relay(2, 2);
         
         drive = new Drive(xBox, jagleft1, jagright1
                 //, jagleft2, jagright2, gear1, gear2
@@ -78,6 +81,7 @@ public class RobotTemplate extends IterativeRobot {
         conf = 0;
         light.set(Relay.Value.kOn);
         noWait = 0;
+
         gyroTimer = 0;
 
         fireOff.set(true);
@@ -91,9 +95,9 @@ public class RobotTemplate extends IterativeRobot {
     public void autonomousPeriodic() {
         compressor.set(Relay.Value.kOn);
         light.set(Relay.Value.kOn);
-        System.out.println("Confidence: " + conf);
+        System.out.println(ultrasonic.getVoltage());
         if (!checkGyro && !atShoot) { //if program does not know it's in range, do the following
-            if (ultrasonic.getVoltage() > 0.86) { //if not in range, do the following
+            if (ultrasonic.getVoltage() > 0.43) { //if not in range, do the following
                 conf = conf + SmartDashboard.getNumber("Confidence") - 70; //add to the total confidence
                 jagleft1.set(-0.648); //move towards the goal
                 jagright1.set(0.6);
@@ -171,12 +175,15 @@ public class RobotTemplate extends IterativeRobot {
     public void teleopInit() {
         compressor.set(Relay.Value.kOn);
         light.set(Relay.Value.kOff);
-        drive.setRun(true);
         drive.start();
+        drive.setRun(true);
         fireOff.set(true);
         fireOn.set(false);
     }
     public void teleopPeriodic() {
+        light.set(Relay.Value.kOff);
+        compressor.set(Relay.Value.kOn);
+        light.set(Relay.Value.kOff);
         if (xBox.getRawAxis(3) <= -0.9){
             shooting = true;
         }
@@ -200,7 +207,6 @@ public class RobotTemplate extends IterativeRobot {
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
-    
+        compressor.set(Relay.Value.kOn);
     }
-    
 }
