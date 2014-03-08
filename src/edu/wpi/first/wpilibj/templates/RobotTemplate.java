@@ -4,20 +4,11 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
-
 package edu.wpi.first.wpilibj.templates;
 
-
-import edu.wpi.first.wpilibj.AnalogChannel;
-import edu.wpi.first.wpilibj.Gyro;
-import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Jaguar;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Relay;
-import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
-
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -27,45 +18,50 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
  * directory.
  */
 public class RobotTemplate extends IterativeRobot {
+
     NetworkTable server = NetworkTable.getTable("smartDashboard");
     SmartDashboard smart;
     Gyro gyro;
     Joystick xBox;
-    Jaguar jagleft1, jagright1 /*, jagleft2, jagright2 */;
-    Solenoid /*gear1, gear2,*/ fireOn, fireOff; //963-2568 Connor Phone Number
+    Jaguar jagleft1, jagright1 /*
+             * , jagleft2, jagright2
+             */;
+    Solenoid /*
+             * gear1, gear2,
+             */ fireOn, fireOff; //963-2568 Connor Phone Number
     Relay light, compressor;
     double speed, turn, leftspeed, rightspeed, conf;
     int i = 0, endTimer = 0, noWait = 0, e = 0, gyroTimer = 0;
     boolean shooting = false, atShoot, afterShoot, checkGyro;
     Drive drive;
     AnalogChannel ultrasonic;
+
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
-        
+
         xBox = new Joystick(1);
-        
+
         jagleft1 = new Jaguar(2, 1);
         jagright1 = new Jaguar(2, 2);
         //jagleft2 = new Jaguar(3);
         //jagright2 = new Jaguar(4);
-        
+
         //gear1 = new Solenoid(1);
         //gear2 = new Solenoid(2);
-        
+
         fireOff = new Solenoid(1);
         fireOn = new Solenoid(2);
-        
+
         gyro = new Gyro(1);
         ultrasonic = new AnalogChannel(2);
-        
+
         light = new Relay(2, 1);
         compressor = new Relay(2, 2);
-        
-        drive = new Drive(xBox, jagleft1, jagright1
-                //, jagleft2, jagright2, gear1, gear2
+
+        drive = new Drive(xBox, jagleft1, jagright1 //, jagleft2, jagright2, gear1, gear2
                 );
 
     }
@@ -73,9 +69,9 @@ public class RobotTemplate extends IterativeRobot {
     /**
      * This function is called periodically during autonomous
      */
-   public void autonomousInit() {
+    public void autonomousInit() {
         compressor.set(Relay.Value.kOn);
-        
+
         gyro.reset();
         endTimer = 0;
         conf = 0;
@@ -95,12 +91,12 @@ public class RobotTemplate extends IterativeRobot {
     public void autonomousPeriodic() {
         compressor.set(Relay.Value.kOn);
         light.set(Relay.Value.kOn);
-        System.out.println(ultrasonic.getVoltage());
+        System.out.println(conf);
         if (!checkGyro && !atShoot) { //if program does not know it's in range, do the following
             if (ultrasonic.getVoltage() > 0.43) { //if not in range, do the following
                 conf = conf + SmartDashboard.getNumber("Confidence") - 70; //add to the total confidence
-                jagleft1.set(-0.648); //move towards the goal
-                jagright1.set(0.6);
+                jagleft1.set(-0.348); //move towards the goal
+                jagright1.set(0.3);
                 System.out.println("Driving forwards.");
             } else { //once in range, do the follwing
                 jagleft1.set(0); //stop moving forwards
@@ -136,11 +132,24 @@ public class RobotTemplate extends IterativeRobot {
                 System.out.println("Gyro check timed out.");
             }
         }
+        /*
+         * if (atShoot && ultrasonic.getVoltage()<30){
+         *     jagleft1.set(0.106);
+         *     jagright1.set(-0.106);
+         * }
+         * if (atShoot && ultrasonic.getVoltage()>30 && ultrasonic.getVoltage()<50){
+         *     jagleft1.set(0);
+         *     jagright1.set(0);
+         * if (atShoot && ultrasonic.getVoltage()>50){
+         *     jagleft1.set(-0.106);
+         *     jagright1.set(0.106);
+         * }
+         */
         if (atShoot && !afterShoot) { //once in position, do the following
             if (conf >= 40) { //if the target has been seen, do the following
                 System.out.println("Saw Target.");
-                fireOff.set(true); //launch the catapult, switched these??????????????????????
-                fireOn.set(false);
+                fireOff.set(false);
+                fireOn.set(true);
                 afterShoot = true; //tell the program it has fired
                 System.out.println("Launching.");
             }
@@ -150,8 +159,8 @@ public class RobotTemplate extends IterativeRobot {
                 }
                 noWait++; //count the timer up
                 if (noWait == 200) { //once the rimer reaches 4 seconds, do the following
-                    fireOff.set(true); //launch the catapult, switched these??????????????????
-                    fireOn.set(false);
+                    fireOff.set(false); //launch the catapult
+                    fireOn.set(true);
                     afterShoot = true; //tell the program it has fired
                     System.out.println("Launching.");
                 }
@@ -180,18 +189,19 @@ public class RobotTemplate extends IterativeRobot {
         fireOff.set(true);
         fireOn.set(false);
     }
+
     public void teleopPeriodic() {
         light.set(Relay.Value.kOff);
         compressor.set(Relay.Value.kOn);
         light.set(Relay.Value.kOff);
-        if (xBox.getRawAxis(3) <= -0.9){
+        if (xBox.getRawAxis(3) <= -0.9 && !shooting) {
             shooting = true;
         }
-        if (shooting){
+        if (shooting) {
             i++;
             fireOff.set(false);
             fireOn.set(true);
-            if (i >= 100){
+            if (i >= 100) {
                 fireOff.set(true);
                 fireOn.set(false);
                 i = 0;
@@ -199,14 +209,17 @@ public class RobotTemplate extends IterativeRobot {
             }
         }
     }
-    public void disabledInit(){
-        drive.setRun(false);
+
+    public void disabledInit() {
+        //drive.setRun(false);
     }
-    
+
     /**
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
         compressor.set(Relay.Value.kOn);
+        fireOff.set(true);
+        fireOn.set(false);
     }
 }
